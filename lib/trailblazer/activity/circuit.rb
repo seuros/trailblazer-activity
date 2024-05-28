@@ -77,6 +77,14 @@ module Trailblazer
 
       def next_for(last_task, signal)
         outputs = @map[last_task]
+        if outputs.nil?
+          puts "last_task: #{last_task}"
+          puts last_task.class
+
+          puts "@map: #{@map.compare_by_identity?}"
+          puts "@map: #{@map.class}"
+          @map.map { |k, v|  puts k.class }
+        end
         outputs[signal]
       end
 

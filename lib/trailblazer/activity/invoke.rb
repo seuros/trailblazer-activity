@@ -16,11 +16,12 @@ module Trailblazer
       end
 
       # The canonical invoke. Usually used by the user when doing Operation.().
-      def call(circuit, lib_ctx, compiler: Args::Compiler, runner: Circuit::WrapRuntime::Runner, flow_options: {}, **circuit_options)
+      def call(circuit, lib_ctx, compiler: Args::Compiler, runner: nil, flow_options: {}, **circuit_options)
         circuit_options = circuit_options.merge(circuit: circuit)
 
         lib_ctx, flow_options, circuit_options = Circuit::Processor.(compiler, lib_ctx, flow_options, circuit_options, runner: Circuit::Node::Runner)
 
+        runner ||= default_runner(**circuit_options)
         signal = nil
 
         invoke_runner(
@@ -63,6 +64,11 @@ module Trailblazer
         extensions_dispatcher_chain = Trailblazer::Circuit::WrapRuntime::Extension::Chain.new(extensions)
 
         return lib_ctx, flow_options, circuit_options.merge(wrap_runtime: extensions_dispatcher_chain)
+      end
+
+      # Without extensions, WrapRuntime::Runner only adds per-step overhead.
+      def default_runner(extensions: [], **)
+        extensions.empty? ? Circuit::Node::Runner : Circuit::WrapRuntime::Runner
       end
 
       def invoke_runner(lib_ctx, flow_options, signal, runner:, **circuit_options)

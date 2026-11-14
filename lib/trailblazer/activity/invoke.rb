@@ -19,7 +19,7 @@ module Trailblazer
       def call(circuit, lib_ctx, compiler: Args::Compiler, runner: nil, flow_options: {}, **circuit_options)
         circuit_options = circuit_options.merge(circuit: circuit)
 
-        lib_ctx, flow_options, circuit_options = Circuit::Processor.(compiler, lib_ctx, flow_options, circuit_options, runner: Circuit::Node::Runner)
+        lib_ctx, flow_options, circuit_options = Circuit::Processor.(compiler, lib_ctx, flow_options, circuit_options, {runner: Circuit::Node::Runner})
 
         runner ||= default_runner(**circuit_options)
         signal = nil
@@ -72,14 +72,9 @@ module Trailblazer
       end
 
       def invoke_runner(lib_ctx, flow_options, signal, runner:, **circuit_options)
-        lib_ctx, flow_options, signal = runner.(
-          lib_ctx,
-          flow_options,
-          signal,
-          context_implementation: Trailblazer::Circuit::Context,
-          **circuit_options,
-          runner: runner
-        )
+        circuit_options = {context_implementation: Trailblazer::Circuit::Context, **circuit_options, runner: runner}
+
+        runner.(lib_ctx, flow_options, signal, circuit_options[:node], circuit_options[:id], circuit_options)
       end
 
       module Args
